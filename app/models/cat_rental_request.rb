@@ -21,23 +21,33 @@ class CatRentalRequest < ActiveRecord::Base
 
   private
   def overlapping_requests
-    params = [self.start_date, self.end_date, self.start_date, self.end_date, self.cat_id]
-
+    req_start = self.start_date
+    req_end = self.end_date
+    
+    params = [req_start, req_end, req_start, req_end, req_start, req_end]
+    
     query = <<-SQL
         SELECT
-          id
+          *
         FROM
           cat_rental_requests
         WHERE
-          ((start_date BETWEEN ? AND ?) OR (end_date BETWEEN ? AND ?))
-          AND cat_id = ?
-          AND status = "APPROVED"
+          (
+            (start_date BETWEEN ? AND ?)
+            OR (end_date BETWEEN ? AND ?)
+          )
+          OR 
+          (
+            (? BETWEEN start_date AND end_date)
+            OR (? BETWEEN start_date AND end_date)
+          )
         SQL
 
     CatRentalRequest.find_by_sql([query, *params])
   end
 
   def overlapping_approved_requests?
+    
     unless overlapping_requests.empty?
       errors[:id] << "Overlapping request"
     end
