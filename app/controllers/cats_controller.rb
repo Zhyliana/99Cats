@@ -1,21 +1,28 @@
 class CatsController < ApplicationController
   def index
     @cats = Cat.all
+    render :index
   end
 
   def show
     @cat = Cat.find(params[:id])
+    render :show
   end
 
   def new
     @cat = Cat.new
+    render :new
   end
 
   def create
     @cat = Cat.new(cat_params)
-    flash.notice = 'Cat "#{@cat.name}" has been born!'
-    @cat.try(:save)
-    redirect_to cat_url(@cat)
+    if @cat.try(:save)
+      flash.notice = 'Cat "#{@cat.name}" has been born!'
+      redirect_to cat_url(@cat)
+    else
+      flash.notice = 'Cat "#{@cat.name}" was not saved!'
+      render :new
+    end      
   end
 
   def destroy
@@ -27,14 +34,18 @@ class CatsController < ApplicationController
 
   def edit
     @cat = Cat.find(params[:id])
+    render :edit
   end
 
   def update
     @cat = Cat.find(params[:id])
-    @cat.update_attributes(cat_params)
-
-    flash.notice = 'Cat "#{@cat.name}" has been fixed.'
-    redirect_to cat_url(@cat)
+    if @cat.update_attributes(cat_params)
+      flash.notice = "#{@cat.name} has been fixed."
+      redirect_to cat_url(@cat)
+    else
+      flash.notice = '"#{@cat.name}" could not be fixed. Please try again.'
+      render :edit
+    end
   end
 
   private
